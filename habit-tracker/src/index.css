@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/* ─── Design tokens ─────────────────────────────────── */
+:root {
+  /* text */
+  --ct1: #ffffff;
+  --ct2: #e2e8f0;
+  --ct3: #94a3b8;
+  --ct4: #64748b;
+  --ct5: #475569;
+
+  /* backgrounds */
+  --cbg: #0a0a0f;
+  --cbg-grad: linear-gradient(135deg, #0a0a0f 0%, #0f0b1a 50%, #0a0f0a 100%);
+
+  /* glass */
+  --cglass: rgba(255, 255, 255, 0.03);
+  --cglass-b: rgba(255, 255, 255, 0.07);
+  --cglass-hov: rgba(255, 255, 255, 0.06);
+  --cglass-hov-b: rgba(255, 255, 255, 0.12);
+
+  /* fills */
+  --cfill1: rgba(255, 255, 255, 0.08);
+  --cfill2: rgba(255, 255, 255, 0.05);
+  --cfill3: rgba(255, 255, 255, 0.03);
+  --cline: rgba(255, 255, 255, 0.06);
+
+  /* scrollbar */
+  --cscroll-track: #111118;
+  --cscroll-thumb: #2d2d3d;
+}
+
+[data-theme="light"] {
+  --ct1: #0f0a1e;
+  --ct2: #2d2050;
+  --ct3: #4b5563;
+  --ct4: #6b7280;
+  --ct5: #9ca3af;
+
+  --cbg: #f7f5ff;
+  --cbg-grad: linear-gradient(135deg, #f7f5ff 0%, #ede9fe 60%, #f0fdf9 100%);
+
+  --cglass: rgba(255, 255, 255, 0.65);
+  --cglass-b: rgba(139, 92, 246, 0.15);
+  --cglass-hov: rgba(255, 255, 255, 0.88);
+  --cglass-hov-b: rgba(139, 92, 246, 0.28);
+
+  --cfill1: rgba(139, 92, 246, 0.08);
+  --cfill2: rgba(139, 92, 246, 0.05);
+  --cfill3: rgba(139, 92, 246, 0.02);
+  --cline: rgba(139, 92, 246, 0.1);
+
+  --cscroll-track: #ede9fe;
+  --cscroll-thumb: #c4b5fd;
+}
+
+/* ─── Base ──────────────────────────────────────────── */
+@layer base {
+  * { box-sizing: border-box; }
+
+  body {
+    background-color: var(--cbg);
+    color: var(--ct2);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--cscroll-track); }
+  ::-webkit-scrollbar-thumb { background: var(--cscroll-thumb); border-radius: 3px; }
+}
+
+/* ─── Utilities ─────────────────────────────────────── */
+@layer utilities {
+  .glass {
+    background: var(--cglass);
+    border: 1px solid var(--cglass-b);
+    backdrop-filter: blur(16px);
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  .glass-hover:hover {
+    background: var(--cglass-hov);
+    border-color: var(--cglass-hov-b);
+  }
+
+  .glow-purple { box-shadow: 0 0 30px rgba(139, 92, 246, 0.2); }
+  .glow-green  { box-shadow: 0 0 30px rgba(34, 197, 94, 0.2); }
+}
+
+/* ─── Custom input ───────────────────────────────────── */
+.habit-input {
+  width: 100%;
+  background: var(--cfill2);
+  border: 1px solid var(--cglass-b);
+  border-radius: 0.75rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  color: var(--ct1);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.habit-input::placeholder { color: var(--ct4); }
+.habit-input:focus {
+  border-color: rgba(139, 92, 246, 0.5);
+  background: var(--cfill1);
+}
+
+/* ─── Light-theme Tailwind overrides ────────────────── */
+[data-theme="light"] .text-white          { color: var(--ct1) !important; }
+[data-theme="light"] .text-slate-100      { color: var(--ct2) !important; }
+[data-theme="light"] .text-slate-300      { color: var(--ct2) !important; }
+[data-theme="light"] .text-slate-400      { color: var(--ct3) !important; }
+[data-theme="light"] .text-slate-500      { color: var(--ct4) !important; }
+[data-theme="light"] .text-slate-600      { color: var(--ct5) !important; }
+
+[data-theme="light"] .bg-white\/5        { background-color: var(--cfill2) !important; }
+[data-theme="light"] .bg-white\/8        { background-color: var(--cfill1) !important; }
+[data-theme="light"] .bg-white\/10       { background-color: var(--cfill1) !important; }
+[data-theme="light"] .bg-white\/15       { background-color: rgba(139,92,246,0.12) !important; }
+[data-theme="light"] .border-white\/5    { border-color: var(--cline) !important; }
+[data-theme="light"] .border-white\/10   { border-color: var(--cfill1) !important; }
+[data-theme="light"] .border-t           { border-top-color: var(--cline); }
+
+[data-theme="light"] .hover\:bg-white\/10:hover { background-color: var(--cfill1) !important; }
+[data-theme="light"] .hover\:bg-white\/8:hover  { background-color: var(--cfill2) !important; }
+[data-theme="light"] .hover\:text-white:hover   { color: var(--ct1) !important; }
+[data-theme="light"] .placeholder-slate-500::placeholder { color: var(--ct4) !important; }
+
+[data-theme="light"] .bg-black\/60 { background-color: rgba(15,10,30,0.45) !important; }
