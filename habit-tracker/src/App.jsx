@@ -14,6 +14,7 @@ import { ReminderBanner } from './components/ReminderBanner'
 import { AuthScreen } from './components/AuthScreen'
 import { WeekView } from './components/WeekView'
 import { MonthHeatmap } from './components/MonthHeatmap'
+import { MonthHabitRanking } from './components/MonthHabitRanking'
 import { StatsBar } from './components/StatsBar'
 import { getWeekDays, isFuture, DAY_NAMES_SHORT, formatDate } from './utils/dateUtils'
 
@@ -497,6 +498,13 @@ export default function App() {
                   )
                 })()}
               </div>
+
+              <MonthHabitRanking
+                habits={habits}
+                year={monthYear}
+                month={monthMonth}
+                isCompleted={isCompleted}
+              />
             </motion.div>
           )}
         </AnimatePresence>

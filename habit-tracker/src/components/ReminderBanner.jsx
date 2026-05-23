@@ -127,15 +127,17 @@ export function ReminderBanner({ todayReminders, overdueReminders, upcomingRemin
             <Bell size={11} /> Hoje
           </p>
           <AnimatePresence>
-            {todayReminders.map((r) => (
-              <ReminderCard
-                key={r.id}
-                reminder={r}
-                onDismiss={() => onDismiss(r.id)}
-                onDelete={() => onDelete(r.id)}
-                onEdit={() => onEdit(r)}
-              />
-            ))}
+            <div className="space-y-2">
+              {todayReminders.map((r) => (
+                <ReminderCard
+                  key={r.id}
+                  reminder={r}
+                  onDismiss={() => onDismiss(r.id)}
+                  onDelete={() => onDelete(r.id)}
+                  onEdit={() => onEdit(r)}
+                />
+              ))}
+            </div>
           </AnimatePresence>
         </div>
       )}
