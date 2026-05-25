@@ -74,7 +74,8 @@ export function DayReminderList({ reminders, onDelete }) {
 
               <button
                 onClick={() => onDelete?.(r.id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 flex-shrink-0"
+                className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors flex-shrink-0"
+                style={{ color: 'var(--ct5)' }}
                 title="Excluir"
               >
                 <Trash2 size={13} />
