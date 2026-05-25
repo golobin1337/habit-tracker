@@ -58,6 +58,7 @@ export default function App() {
     getMonthStats,
     completionToday,
     getHabitProgress,
+    isHabitActiveOnDate,
   } = useHabits(user?.id)
 
   const today = new Date()
@@ -72,7 +73,9 @@ export default function App() {
   const monthMonth = monthDate.getMonth()
   const monthStats = getMonthStats(monthYear, monthMonth)
 
-  const completedToday = habits.filter((h) => isCompleted(h.id, today)).length
+  const todayHabits = habits.filter((h) => isHabitActiveOnDate(h, today))
+  const yesterdayHabits = habits.filter((h) => isHabitActiveOnDate(h, yesterday))
+  const completedToday = todayHabits.filter((h) => isCompleted(h.id, today)).length
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -86,12 +89,19 @@ export default function App() {
     reorderHabits(arrayMove(habits, oldIndex, newIndex))
   }
 
-  const getWeekDataForHabit = (habitId) =>
-    weekDays.map((date, i) => ({
-      done: isCompleted(habitId, date),
-      future: isFuture(date),
-      label: `${DAY_NAMES_SHORT[i]}: ${isCompleted(habitId, date) ? 'Feito' : 'Pendente'}`,
-    }))
+  const getWeekDataForHabit = (habit) =>
+    weekDays.map((date, i) => {
+      const scheduled = isHabitActiveOnDate(habit, date)
+      const done = scheduled && isCompleted(habit.id, date)
+      return {
+        done,
+        future: isFuture(date),
+        scheduled,
+        label: scheduled
+          ? `${DAY_NAMES_SHORT[i]}: ${done ? 'Feito' : 'Pendente'}`
+          : `${DAY_NAMES_SHORT[i]}: Não programado`,
+      }
+    })
 
   // Auth loading
   if (authLoading) return (
@@ -279,11 +289,17 @@ export default function App() {
                     Clique em &ldquo;Novo&rdquo; para começar
                   </p>
                 </motion.div>
+              ) : todayHabits.length === 0 ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+                  <div className="text-4xl mb-3">😴</div>
+                  <p className="text-slate-400 font-medium">Nenhum hábito para hoje</p>
+                  <p className="text-slate-600 text-sm mt-1">Aproveite o dia de descanso!</p>
+                </motion.div>
               ) : (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={habits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
                     <AnimatePresence>
-                      {habits.map((habit) => {
+                      {todayHabits.map((habit) => {
                         const prog = getHabitProgress(habit, weekDays)
                         return (
                           <HabitCard
@@ -296,7 +312,7 @@ export default function App() {
                             onToggle={() => toggleHabit(habit.id, today)}
                             onDelete={() => deleteHabit(habit.id)}
                             onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
-                            weekData={getWeekDataForHabit(habit.id)}
+                            weekData={getWeekDataForHabit(habit)}
                           />
                         )
                       })}
@@ -305,7 +321,7 @@ export default function App() {
                 </DndContext>
               )}
 
-              {habits.length > 0 && completedToday === habits.length && (
+              {todayHabits.length > 0 && completedToday === todayHabits.length && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -346,11 +362,16 @@ export default function App() {
                   <div className="text-5xl mb-4">🌱</div>
                   <p className="text-slate-400 font-medium">Nenhum hábito ainda</p>
                 </motion.div>
+              ) : yesterdayHabits.length === 0 ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+                  <div className="text-4xl mb-3">😴</div>
+                  <p className="text-slate-400 font-medium">Nenhum hábito programado para ontem</p>
+                </motion.div>
               ) : (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={habits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
                     <AnimatePresence>
-                      {habits.map((habit) => (
+                      {yesterdayHabits.map((habit) => (
                         <HabitCard
                           key={habit.id}
                           habit={habit}
@@ -359,20 +380,19 @@ export default function App() {
                           onToggle={() => toggleHabit(habit.id, yesterday)}
                           onDelete={() => deleteHabit(habit.id)}
                           onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
-                          weekData={getWeekDataForHabit(habit.id)}
+                          weekData={getWeekDataForHabit(habit)}
                         />
                       ))}
-
                     </AnimatePresence>
                   </SortableContext>
                 </DndContext>
               )}
 
               {(() => {
-                const completedYesterday = habits.filter((h) =>
+                const completedYesterday = yesterdayHabits.filter((h) =>
                   isCompleted(h.id, yesterday)
                 ).length
-                return habits.length > 0 && completedYesterday === habits.length ? (
+                return yesterdayHabits.length > 0 && completedYesterday === yesterdayHabits.length ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -413,9 +433,9 @@ export default function App() {
                 ) : (
                   <div className="space-y-3">
                     {habits.map((habit) => {
-                      const weekData = getWeekDataForHabit(habit.id)
+                      const weekData = getWeekDataForHabit(habit)
                       const done = weekData.filter((d) => d.done).length
-                      const total = weekData.length
+                      const total = weekData.filter((d) => d.scheduled).length
                       const pct = total > 0 ? done / total : 0
 
                       return (

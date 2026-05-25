@@ -70,6 +70,7 @@ export function useHabits(userId) {
         position: habits.length,
         frequency_type: habit.frequency_type || 'daily',
         frequency_count: habit.frequency_count || 1,
+        frequency_days: habit.frequency_days ?? null,
       })
       .select()
       .single()
@@ -174,7 +175,12 @@ export function useHabits(userId) {
 
   const completionToday = useMemo(() => getDayCompletion(new Date()), [getDayCompletion])
 
-  // Returns { progress: 0-1, completed: bool, count: number, goal: number, label: string }
+  const isHabitActiveOnDate = useCallback((habit, date) => {
+    if ((habit.frequency_type ?? 'daily') !== 'specific') return true
+    return (habit.frequency_days ?? []).includes(date.getDay())
+  }, [])
+
+  // Returns { progress: 0-1, completed: bool, count: number, goal: number, label: string|null }
   const getHabitProgress = useCallback((habit, weekDays) => {
     const ft = habit.frequency_type || 'daily'
     const fc = habit.frequency_count || 1
@@ -182,6 +188,24 @@ export function useHabits(userId) {
     if (ft === 'daily') {
       const done = isCompleted(habit.id, new Date())
       return { progress: done ? 1 : 0, completed: done, count: done ? 1 : 0, goal: 1, label: null }
+    }
+
+    if (ft === 'specific') {
+      const days = habit.frequency_days ?? []
+      const scheduled = weekDays.filter((d) => days.includes(d.getDay()))
+      const count = scheduled.filter((d) => isCompleted(habit.id, d)).length
+      const goal = scheduled.length
+      const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+      const label = days
+        .slice()
+        .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))
+        .map((d) => dayNames[d])
+        .join('·')
+      return {
+        progress: goal > 0 ? Math.min(1, count / goal) : 0,
+        completed: goal > 0 && count >= goal,
+        count, goal, label,
+      }
     }
 
     if (ft === 'weekly') {
@@ -217,6 +241,7 @@ export function useHabits(userId) {
     habits, loading,
     addHabit, editHabit, deleteHabit, toggleHabit, reorderHabits,
     isCompleted, getDayCompletion, getStreak, getTotalStreak,
-    getWeekStats, getMonthStats, completionToday, getHabitProgress,
+    getWeekStats, getMonthStats, completionToday,
+    getHabitProgress, isHabitActiveOnDate,
   }
 }

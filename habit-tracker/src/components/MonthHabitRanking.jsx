@@ -17,17 +17,22 @@ export function MonthHabitRanking({ habits, year, month, isCompleted }) {
         const ft = habit.frequency_type || 'daily'
         const fc = habit.frequency_count || 1
 
+        const specificDays = habit.frequency_days ?? []
+
         for (let d = 1; d <= daysInMonth; d++) {
           const date = new Date(year, month, d)
           const key = toKey(date)
           if (key > todayKey) break
           if (startDate <= key) {
-            validDays++
-            if (isCompleted(habit.id, date)) completed++
+            const scheduled = ft !== 'specific' || specificDays.includes(date.getDay())
+            if (scheduled) {
+              validDays++
+              if (isCompleted(habit.id, date)) completed++
+            }
           }
         }
 
-        const possible = ft === 'daily' ? validDays
+        const possible = (ft === 'daily' || ft === 'specific') ? validDays
           : ft === 'weekly' ? Math.ceil(validDays / 7) * fc
           : fc
 

@@ -101,8 +101,12 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, onTog
                   transition={{ delay: i * 0.04 }}
                   className="w-4 h-4 rounded-sm flex-shrink-0"
                   style={{
-                    backgroundColor: day.done ? habit.color : day.future ? 'var(--cfill3)' : 'var(--cfill2)',
+                    backgroundColor: !day.scheduled ? 'transparent'
+                      : day.done ? habit.color
+                      : day.future ? 'var(--cfill3)'
+                      : 'var(--cfill2)',
                     boxShadow: day.done ? `0 0 6px ${habit.color}60` : undefined,
+                    border: !day.scheduled ? '1px dashed var(--cfill2)' : 'none',
                   }}
                   title={day.label}
                 />
