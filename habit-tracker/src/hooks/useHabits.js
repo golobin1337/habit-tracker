@@ -177,7 +177,9 @@ export function useHabits(userId) {
 
   const isHabitActiveOnDate = useCallback((habit, date) => {
     if ((habit.frequency_type ?? 'daily') !== 'specific') return true
-    return (habit.frequency_days ?? []).includes(date.getDay())
+    const days = habit.frequency_days
+    if (!days || days.length === 0) return true // coluna ausente → mostra sempre
+    return days.includes(date.getDay())
   }, [])
 
   // Returns { progress: 0-1, completed: bool, count: number, goal: number, label: string|null }
