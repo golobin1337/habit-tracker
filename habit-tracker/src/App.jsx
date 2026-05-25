@@ -57,6 +57,7 @@ export default function App() {
     getWeekStats,
     getMonthStats,
     completionToday,
+    getHabitProgress,
   } = useHabits(user?.id)
 
   const today = new Date()
@@ -282,18 +283,23 @@ export default function App() {
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={habits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
                     <AnimatePresence>
-                      {habits.map((habit) => (
-                        <HabitCard
-                          key={habit.id}
-                          habit={habit}
-                          completed={isCompleted(habit.id, today)}
-                          streak={getStreak(habit.id)}
-                          onToggle={() => toggleHabit(habit.id, today)}
-                          onDelete={() => deleteHabit(habit.id)}
-                          onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
-                          weekData={getWeekDataForHabit(habit.id)}
-                        />
-                      ))}
+                      {habits.map((habit) => {
+                        const prog = getHabitProgress(habit, weekDays)
+                        return (
+                          <HabitCard
+                            key={habit.id}
+                            habit={habit}
+                            completed={prog.completed}
+                            progress={prog.progress}
+                            freqLabel={prog.label}
+                            streak={getStreak(habit.id)}
+                            onToggle={() => toggleHabit(habit.id, today)}
+                            onDelete={() => deleteHabit(habit.id)}
+                            onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
+                            weekData={getWeekDataForHabit(habit.id)}
+                          />
+                        )
+                      })}
                     </AnimatePresence>
                   </SortableContext>
                 </DndContext>
@@ -356,6 +362,7 @@ export default function App() {
                           weekData={getWeekDataForHabit(habit.id)}
                         />
                       ))}
+
                     </AnimatePresence>
                   </SortableContext>
                 </DndContext>

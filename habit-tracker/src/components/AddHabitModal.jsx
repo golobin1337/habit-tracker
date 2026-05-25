@@ -3,28 +3,41 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { PRESET_COLORS, PRESET_ICONS } from '../hooks/useHabits'
 
+const FREQ_TYPES = [
+  { id: 'daily', label: 'Diário' },
+  { id: 'weekly', label: 'Semanal' },
+  { id: 'monthly', label: 'Mensal' },
+]
+
 export function AddHabitModal({ open, onClose, onAdd, onEdit, editingHabit }) {
   const isEditing = !!editingHabit
 
   const [name, setName] = useState('')
   const [icon, setIcon] = useState('🎯')
   const [color, setColor] = useState('#8b5cf6')
+  const [freqType, setFreqType] = useState('daily')
+  const [freqCount, setFreqCount] = useState(3)
 
   useEffect(() => {
     if (open) {
       setName(editingHabit?.name ?? '')
       setIcon(editingHabit?.icon ?? '🎯')
       setColor(editingHabit?.color ?? '#8b5cf6')
+      setFreqType(editingHabit?.frequency_type ?? 'daily')
+      setFreqCount(editingHabit?.frequency_count ?? 3)
     }
   }, [open, editingHabit])
+
+  const freqMax = freqType === 'weekly' ? 7 : 31
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!name.trim()) return
+    const freq = { frequency_type: freqType, frequency_count: freqType === 'daily' ? 1 : freqCount }
     if (isEditing) {
-      onEdit(editingHabit.id, { name: name.trim(), icon, color })
+      onEdit(editingHabit.id, { name: name.trim(), icon, color, ...freq })
     } else {
-      onAdd({ name: name.trim(), icon, color })
+      onAdd({ name: name.trim(), icon, color, ...freq })
     }
     onClose()
   }
@@ -130,6 +143,62 @@ export function AddHabitModal({ open, onClose, onAdd, onEdit, editingHabit }) {
                 </div>
               </div>
 
+              {/* Frequência */}
+              <div>
+                <label className="block text-xs mb-2 font-medium uppercase tracking-wider" style={{ color: 'var(--ct3)' }}>
+                  Frequência
+                </label>
+                <div className="flex gap-1.5 mb-3">
+                  {FREQ_TYPES.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setFreqType(f.id)}
+                      className="flex-1 py-2 rounded-xl text-sm font-medium transition-all"
+                      style={{
+                        background: freqType === f.id ? `${color}30` : 'var(--cfill2)',
+                        border: `1px solid ${freqType === f.id ? `${color}60` : 'transparent'}`,
+                        color: freqType === f.id ? color : 'var(--ct4)',
+                      }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                {freqType !== 'daily' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center justify-center gap-4"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setFreqCount((n) => Math.max(1, n - 1))}
+                      className="w-9 h-9 rounded-xl text-lg font-bold transition-colors"
+                      style={{ background: 'var(--cfill2)', color: 'var(--ct2)' }}
+                    >
+                      −
+                    </button>
+                    <div className="text-center">
+                      <span className="text-2xl font-bold" style={{ color }}>{freqCount}</span>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--ct4)' }}>
+                        {freqCount === 1 ? 'vez' : 'vezes'} por {freqType === 'weekly' ? 'semana' : 'mês'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFreqCount((n) => Math.min(freqMax, n + 1))}
+                      className="w-9 h-9 rounded-xl text-lg font-bold transition-colors"
+                      style={{ background: 'var(--cfill2)', color: 'var(--ct2)' }}
+                    >
+                      +
+                    </button>
+                  </motion.div>
+                )}
+              </div>
+
               {/* Preview */}
               <div
                 className="flex items-center gap-3 rounded-xl p-3"
@@ -146,7 +215,7 @@ export function AddHabitModal({ open, onClose, onAdd, onEdit, editingHabit }) {
                     {name || 'Pré-visualização'}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--ct4)' }}>
-                    {isEditing ? 'Editando hábito' : 'Novo hábito'}
+                    {freqType === 'daily' ? 'Todo dia' : `${freqCount}× por ${freqType === 'weekly' ? 'semana' : 'mês'}`}
                   </p>
                 </div>
               </div>

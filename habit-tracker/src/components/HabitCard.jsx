@@ -4,7 +4,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ProgressRing } from './ProgressRing'
 
-export function HabitCard({ habit, completed, streak, onToggle, onDelete, onEdit, weekData }) {
+export function HabitCard({ habit, completed, progress, freqLabel, streak, onToggle, onDelete, onEdit, weekData }) {
   const {
     attributes,
     listeners,
@@ -13,6 +13,8 @@ export function HabitCard({ habit, completed, streak, onToggle, onDelete, onEdit
     transition,
     isDragging,
   } = useSortable({ id: habit.id })
+
+  const ringProgress = progress ?? (completed ? 1 : 0)
 
   return (
     <div
@@ -51,7 +53,7 @@ export function HabitCard({ habit, completed, streak, onToggle, onDelete, onEdit
             onClick={onToggle}
             className="relative flex-shrink-0"
           >
-            <ProgressRing progress={completed ? 1 : 0} size={52} strokeWidth={3} color={habit.color}>
+            <ProgressRing progress={ringProgress} size={52} strokeWidth={3} color={habit.color}>
               <AnimatePresence mode="wait">
                 {completed ? (
                   <motion.span key="done" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="text-xl">
@@ -74,6 +76,14 @@ export function HabitCard({ habit, completed, streak, onToggle, onDelete, onEdit
               >
                 {habit.name}
               </span>
+              {freqLabel && (
+                <span
+                  className="text-xs font-semibold shrink-0 px-1.5 py-0.5 rounded-md"
+                  style={{ background: `${habit.color}20`, color: habit.color }}
+                >
+                  {freqLabel}
+                </span>
+              )}
               {streak > 0 && (
                 <span className="flex items-center gap-0.5 text-xs text-orange-400 font-semibold shrink-0">
                   <Flame size={12} />

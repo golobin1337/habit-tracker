@@ -12,18 +12,24 @@ export function MonthHabitRanking({ habits, year, month, isCompleted }) {
     return habits
       .map((habit) => {
         let completed = 0
-        let possible = 0
+        let validDays = 0
         const startDate = habit.start_date ?? habit.created_at?.slice(0, 10) ?? ''
+        const ft = habit.frequency_type || 'daily'
+        const fc = habit.frequency_count || 1
 
         for (let d = 1; d <= daysInMonth; d++) {
           const date = new Date(year, month, d)
           const key = toKey(date)
           if (key > todayKey) break
           if (startDate <= key) {
-            possible++
+            validDays++
             if (isCompleted(habit.id, date)) completed++
           }
         }
+
+        const possible = ft === 'daily' ? validDays
+          : ft === 'weekly' ? Math.ceil(validDays / 7) * fc
+          : fc
 
         return { habit, completed, possible, rate: possible > 0 ? completed / possible : 0 }
       })

@@ -61,7 +61,16 @@ export function useHabits(userId) {
   const addHabit = useCallback(async (habit) => {
     const { data, error } = await supabase
       .from('habits')
-      .insert({ user_id: userId, name: habit.name, icon: habit.icon || '🎯', color: habit.color || '#8b5cf6', start_date: today(), position: habits.length })
+      .insert({
+        user_id: userId,
+        name: habit.name,
+        icon: habit.icon || '🎯',
+        color: habit.color || '#8b5cf6',
+        start_date: today(),
+        position: habits.length,
+        frequency_type: habit.frequency_type || 'daily',
+        frequency_count: habit.frequency_count || 1,
+      })
       .select()
       .single()
     if (!error && data) setHabits((prev) => [...prev, data])
@@ -165,10 +174,49 @@ export function useHabits(userId) {
 
   const completionToday = useMemo(() => getDayCompletion(new Date()), [getDayCompletion])
 
+  // Returns { progress: 0-1, completed: bool, count: number, goal: number, label: string }
+  const getHabitProgress = useCallback((habit, weekDays) => {
+    const ft = habit.frequency_type || 'daily'
+    const fc = habit.frequency_count || 1
+
+    if (ft === 'daily') {
+      const done = isCompleted(habit.id, new Date())
+      return { progress: done ? 1 : 0, completed: done, count: done ? 1 : 0, goal: 1, label: null }
+    }
+
+    if (ft === 'weekly') {
+      const count = weekDays.filter((d) => isCompleted(habit.id, d)).length
+      return {
+        progress: Math.min(1, count / fc),
+        completed: count >= fc,
+        count, goal: fc,
+        label: `${count}/${fc} sem.`,
+      }
+    }
+
+    // monthly
+    const now = new Date()
+    const y = now.getFullYear()
+    const m = now.getMonth()
+    const daysInMonth = new Date(y, m + 1, 0).getDate()
+    let count = 0
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(y, m, d)
+      if (toKey(date) > today()) break
+      if (isCompleted(habit.id, date)) count++
+    }
+    return {
+      progress: Math.min(1, count / fc),
+      completed: count >= fc,
+      count, goal: fc,
+      label: `${count}/${fc} mês`,
+    }
+  }, [isCompleted])
+
   return {
     habits, loading,
     addHabit, editHabit, deleteHabit, toggleHabit, reorderHabits,
     isCompleted, getDayCompletion, getStreak, getTotalStreak,
-    getWeekStats, getMonthStats, completionToday,
+    getWeekStats, getMonthStats, completionToday, getHabitProgress,
   }
 }
