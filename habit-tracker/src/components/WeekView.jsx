@@ -13,7 +13,7 @@ export function WeekView({ weekStats }) {
         Esta Semana
       </h3>
 
-      <div className="flex items-end gap-2 h-20">
+      <div className="flex items-end gap-2">
         {weekStats.map(({ date, completion }, i) => {
           const today = isToday(date)
           const future = isFuture(date)
