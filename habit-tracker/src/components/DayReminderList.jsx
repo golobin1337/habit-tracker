@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Check, Clock, AlertTriangle, Bell } from 'lucide-react'
+import { Check, Clock, AlertTriangle, Bell, Trash2 } from 'lucide-react'
 import { MONTH_NAMES } from '../utils/dateUtils'
 
 function formatTime(time) {
@@ -11,7 +11,7 @@ function formatDate(dateStr) {
   return `${d} de ${MONTH_NAMES[m - 1]}`
 }
 
-export function DayReminderList({ reminders }) {
+export function DayReminderList({ reminders, onDelete }) {
   if (!reminders || reminders.length === 0) return null
 
   const urgent = reminders.filter((r) => r.urgent)
@@ -41,8 +41,9 @@ export function DayReminderList({ reminders }) {
               key={r.id}
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20, scale: 0.95 }}
               transition={{ delay: i * 0.04 }}
-              className="flex items-center gap-3 rounded-xl p-3"
+              className="flex items-center gap-3 rounded-xl p-3 group"
               style={{
                 background: r.done ? 'var(--cfill2)' : `${color}10`,
                 border: `1px solid ${r.done ? 'transparent' : `${color}25`}`,
@@ -71,11 +72,17 @@ export function DayReminderList({ reminders }) {
                 )}
               </div>
 
+              <button
+                onClick={() => onDelete?.(r.id)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 flex-shrink-0"
+                title="Excluir"
+              >
+                <Trash2 size={13} />
+              </button>
+
               <div
                 className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: r.done ? '#22c55e20' : `${color}15`,
-                }}
+                style={{ background: r.done ? '#22c55e20' : `${color}15` }}
               >
                 {r.done
                   ? <Check size={12} style={{ color: '#22c55e' }} />

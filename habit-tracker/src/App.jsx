@@ -311,7 +311,7 @@ export default function App() {
                 </motion.div>
               )}
 
-              <DayReminderList reminders={getRemindersForDate(toKey(today))} />
+              <DayReminderList reminders={getRemindersForDate(toKey(today))} onDelete={deleteReminder} />
             </motion.div>
           )}
 
@@ -378,7 +378,7 @@ export default function App() {
                 ) : null
               })()}
 
-              <DayReminderList reminders={getRemindersForDate(toKey(yesterday))} />
+              <DayReminderList reminders={getRemindersForDate(toKey(yesterday))} onDelete={deleteReminder} />
             </motion.div>
           )}
 
