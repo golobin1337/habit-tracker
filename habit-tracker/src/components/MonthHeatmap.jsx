@@ -10,7 +10,7 @@ const intensityColor = (value) => {
   return 'rgba(139,92,246,0.9)'
 }
 
-export function MonthHeatmap({ year, month, stats, onPrev, onNext }) {
+export function MonthHeatmap({ year, month, stats, onPrev, onNext, onDayClick }) {
   const days = getMonthDays(year, month)
 
   return (
@@ -62,6 +62,8 @@ export function MonthHeatmap({ year, month, stats, onPrev, onNext }) {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: currentMonth ? 1 : 0.2, scale: 1 }}
               transition={{ delay: i * 0.008 }}
+              whileTap={{ scale: currentMonth ? 0.88 : 1 }}
+              onClick={() => currentMonth && onDayClick?.(date)}
               className="aspect-square rounded-md flex items-center justify-center relative"
               style={{
                 backgroundColor: currentMonth
@@ -72,6 +74,7 @@ export function MonthHeatmap({ year, month, stats, onPrev, onNext }) {
                   : value >= 0.75 && currentMonth
                   ? '0 0 8px rgba(139,92,246,0.4)'
                   : undefined,
+                cursor: currentMonth ? 'pointer' : 'default',
               }}
               title={`${date.getDate()}/${month + 1}: ${Math.round(value * 100)}%`}
             >

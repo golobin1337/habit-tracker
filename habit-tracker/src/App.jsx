@@ -16,6 +16,7 @@ import { WeekView } from './components/WeekView'
 import { MonthHeatmap } from './components/MonthHeatmap'
 import { DayReminderList } from './components/DayReminderList'
 import { MonthHabitRanking } from './components/MonthHabitRanking'
+import { DayDetailModal } from './components/DayDetailModal'
 import { StatsBar } from './components/StatsBar'
 import { getWeekDays, isFuture, DAY_NAMES_SHORT, formatDate, toKey } from './utils/dateUtils'
 
@@ -33,6 +34,7 @@ export default function App() {
   const [reminderModalOpen, setReminderModalOpen] = useState(false)
   const [editingReminder, setEditingReminder] = useState(null)
   const [monthOffset, setMonthOffset] = useState(0)
+  const [selectedDay, setSelectedDay] = useState(null)
   const { theme, toggle, isDark } = useTheme()
   const { user, signIn, signUp, signOut, loading: authLoading } = useAuth()
 
@@ -465,6 +467,7 @@ export default function App() {
                 stats={monthStats}
                 onPrev={() => setMonthOffset((o) => o - 1)}
                 onNext={() => setMonthOffset((o) => o + 1)}
+                onDayClick={setSelectedDay}
               />
 
               <div className="mt-4 glass rounded-2xl p-5">
@@ -530,6 +533,16 @@ export default function App() {
         onEdit={editReminder}
         editingReminder={editingReminder}
       />
+
+      {selectedDay && (
+        <DayDetailModal
+          date={selectedDay}
+          habits={habits}
+          isCompleted={isCompleted}
+          reminders={getRemindersForDate(toKey(selectedDay))}
+          onClose={() => setSelectedDay(null)}
+        />
+      )}
     </div>
   )
 }
