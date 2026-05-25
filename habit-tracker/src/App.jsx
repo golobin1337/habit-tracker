@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Calendar, LayoutGrid, Moon, Sun, History, Bell, LogOut, Loader2 } from 'lucide-react'
+import { Plus, Calendar, LayoutGrid, Moon, Sun, History, Bell, LogOut, Loader2, Sunrise } from 'lucide-react'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import { useHabits } from './hooks/useHabits'
@@ -22,6 +22,7 @@ import { getWeekDays, isFuture, DAY_NAMES_SHORT, formatDate, toKey } from './uti
 
 const TABS = [
   { id: 'today', label: 'Hoje', icon: Moon },
+  { id: 'tomorrow', label: 'Amanhã', icon: Sunrise },
   { id: 'yesterday', label: 'Ontem', icon: History },
   { id: 'week', label: 'Semana', icon: LayoutGrid },
   { id: 'month', label: 'Mês', icon: Calendar },
@@ -64,6 +65,8 @@ export default function App() {
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(today.getDate() - 1)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
 
   const weekDays = getWeekDays(today)
   const weekStats = getWeekStats(weekDays)
@@ -74,6 +77,7 @@ export default function App() {
   const monthStats = getMonthStats(monthYear, monthMonth)
 
   const todayHabits = habits.filter((h) => isHabitActiveOnDate(h, today))
+  const tomorrowHabits = habits.filter((h) => isHabitActiveOnDate(h, tomorrow))
   const yesterdayHabits = habits.filter((h) => isHabitActiveOnDate(h, yesterday))
   const completedToday = todayHabits.filter((h) => isCompleted(h.id, today)).length
 
@@ -334,6 +338,69 @@ export default function App() {
               )}
 
               <DayReminderList reminders={getRemindersForDate(toKey(today))} onDelete={deleteReminder} />
+            </motion.div>
+          )}
+
+          {tab === 'tomorrow' && (
+            <motion.div
+              key="tomorrow"
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 12 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center gap-2 px-1 mb-1" style={{ color: 'var(--ct4)' }}>
+                <Sunrise size={13} />
+                <span className="text-xs">{formatDate(tomorrow)}</span>
+              </div>
+
+              {habits.length === 0 ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+                  <div className="text-5xl mb-4">🌱</div>
+                  <p className="text-slate-400 font-medium">Nenhum hábito ainda</p>
+                </motion.div>
+              ) : tomorrowHabits.length === 0 ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+                  <div className="text-4xl mb-3">🏖️</div>
+                  <p className="text-slate-400 font-medium">Nenhum hábito programado para amanhã</p>
+                  <p className="text-slate-600 text-sm mt-1">Aproveite o dia de folga!</p>
+                </motion.div>
+              ) : (
+                <div className="space-y-3">
+                  {tomorrowHabits.map((habit) => (
+                    <motion.div
+                      key={habit.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="glass rounded-2xl p-4 flex items-center gap-3"
+                      style={{ opacity: 0.75 }}
+                    >
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                        style={{ background: `${habit.color}18`, border: `1px solid ${habit.color}25` }}
+                      >
+                        {habit.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate" style={{ color: 'var(--ct1)' }}>
+                          {habit.name}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--ct4)' }}>
+                          {habit.frequency_type === 'daily' ? 'Todo dia'
+                            : habit.frequency_type === 'specific'
+                              ? (habit.frequency_days ?? [])
+                                  .slice().sort((a,b) => (a===0?7:a)-(b===0?7:b))
+                                  .map(d => ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d])
+                                  .join(' · ')
+                              : `${habit.frequency_count}× por ${habit.frequency_type === 'weekly' ? 'semana' : 'mês'}`}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              <DayReminderList reminders={getRemindersForDate(toKey(tomorrow))} onDelete={deleteReminder} />
             </motion.div>
           )}
 
