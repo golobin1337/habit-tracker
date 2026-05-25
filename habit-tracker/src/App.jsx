@@ -227,7 +227,7 @@ export default function App() {
           <StatsBar
             completionToday={completionToday}
             totalStreak={getTotalStreak()}
-            totalHabits={habits.length}
+            totalHabits={todayHabits.length}
             completedToday={completedToday}
           />
         </div>

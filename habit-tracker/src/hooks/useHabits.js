@@ -121,7 +121,15 @@ export function useHabits(userId) {
 
   const getDayCompletion = useCallback((date) => {
     const key = toKey(date)
-    const relevant = habits.filter((h) => (h.start_date ?? h.created_at ?? '') <= key)
+    const relevant = habits.filter((h) => {
+      const start = h.start_date ?? h.created_at ?? ''
+      if (start > key) return false
+      if ((h.frequency_type ?? 'daily') === 'specific') {
+        const days = h.frequency_days
+        if (days && days.length > 0) return days.includes(date.getDay())
+      }
+      return true
+    })
     if (relevant.length === 0) return 0
     const done = relevant.filter((h) => completedSet.has(`${h.id}:${key}`)).length
     return done / relevant.length
