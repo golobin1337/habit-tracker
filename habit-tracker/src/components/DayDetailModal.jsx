@@ -8,7 +8,7 @@ function formatTime(time) {
   return time ? ` às ${time}` : ''
 }
 
-export function DayDetailModal({ date, habits, isCompleted, reminders, onClose }) {
+export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate, reminders, onClose }) {
   if (!date) return null
 
   const key = toKey(date)
@@ -16,14 +16,12 @@ export function DayDetailModal({ date, habits, isCompleted, reminders, onClose }
   const monthName = MONTH_NAMES[date.getMonth()]
   const label = `${dayName}, ${date.getDate()} de ${monthName}`
 
-  const doneHabits = habits.filter((h) => {
+  const activeHabits = habits.filter((h) => {
     const start = h.start_date ?? h.created_at?.slice(0, 10) ?? ''
-    return start <= key && isCompleted(h.id, date)
+    return start <= key && isHabitActiveOnDate(h, date)
   })
-  const missedHabits = habits.filter((h) => {
-    const start = h.start_date ?? h.created_at?.slice(0, 10) ?? ''
-    return start <= key && !isCompleted(h.id, date)
-  })
+  const doneHabits = activeHabits.filter((h) => isCompleted(h.id, date))
+  const missedHabits = activeHabits.filter((h) => !isCompleted(h.id, date))
 
   const urgentReminders = reminders.filter((r) => r.urgent)
   const normalReminders = reminders.filter((r) => !r.urgent)
