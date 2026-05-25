@@ -42,8 +42,12 @@ export function useReminders(userId) {
   const upcomingReminders = reminders.filter((r) => !r.done && r.date > today())
   const overdueReminders  = reminders.filter((r) => !r.done && r.date < today())
 
+  const getRemindersForDate = useCallback((dateKey) =>
+    reminders.filter((r) => r.date === dateKey),
+  [reminders])
+
   return {
     reminders, activeReminders, todayReminders, upcomingReminders, overdueReminders,
-    addReminder, editReminder, dismissReminder, deleteReminder,
+    addReminder, editReminder, dismissReminder, deleteReminder, getRemindersForDate,
   }
 }

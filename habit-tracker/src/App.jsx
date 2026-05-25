@@ -14,9 +14,10 @@ import { ReminderBanner } from './components/ReminderBanner'
 import { AuthScreen } from './components/AuthScreen'
 import { WeekView } from './components/WeekView'
 import { MonthHeatmap } from './components/MonthHeatmap'
+import { DayReminderList } from './components/DayReminderList'
 import { MonthHabitRanking } from './components/MonthHabitRanking'
 import { StatsBar } from './components/StatsBar'
-import { getWeekDays, isFuture, DAY_NAMES_SHORT, formatDate } from './utils/dateUtils'
+import { getWeekDays, isFuture, DAY_NAMES_SHORT, formatDate, toKey } from './utils/dateUtils'
 
 const TABS = [
   { id: 'today', label: 'Hoje', icon: Moon },
@@ -37,7 +38,7 @@ export default function App() {
 
   const {
     addReminder, editReminder, dismissReminder, deleteReminder,
-    todayReminders, upcomingReminders, overdueReminders, activeReminders,
+    todayReminders, upcomingReminders, overdueReminders, activeReminders, getRemindersForDate,
   } = useReminders(user?.id)
 
   const {
@@ -307,6 +308,8 @@ export default function App() {
                   <p className="text-slate-500 text-sm mt-1">Incrível, continue assim!</p>
                 </motion.div>
               )}
+
+              <DayReminderList reminders={getRemindersForDate(toKey(today))} />
             </motion.div>
           )}
 
@@ -372,6 +375,8 @@ export default function App() {
                   </motion.div>
                 ) : null
               })()}
+
+              <DayReminderList reminders={getRemindersForDate(toKey(yesterday))} />
             </motion.div>
           )}
 
