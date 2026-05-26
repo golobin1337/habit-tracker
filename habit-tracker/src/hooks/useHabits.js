@@ -32,6 +32,8 @@ const ICONS = [
   '🎨', '🎵', '🎮', '📷', '🎭', '🎸', '🎬', '🖌️',
   // Lifestyle
   '🌱', '🌿', '🙏', '❤️', '⭐', '🔥', '🌅', '🫂',
+  // Casa & ambiente
+  '🏠', '🛋️', '🧹', '🧺', '🪴', '🛁', '🪟', '🔑',
 ]
 export const PRESET_ICONS = ICONS
 
