@@ -141,19 +141,46 @@ export function useHabits(userId) {
   }, [habits, completedSet])
 
   const getStreak = useCallback((habitId) => {
+    const habit = habits.find((h) => h.id === habitId)
+    if (!habit) return 0
+
+    const ft = habit.frequency_type ?? 'daily'
+    const scheduledDays = ft === 'specific' ? (habit.frequency_days ?? []) : null
+
+    const isScheduled = (date) => {
+      if (scheduledDays === null) return true
+      if (scheduledDays.length === 0) return true
+      return scheduledDays.includes(date.getDay())
+    }
+
     let streak = 0
     const d = new Date()
+
     while (true) {
       const key = toKey(d)
-      if (!completedSet.has(`${habitId}:${key}`)) {
-        if (key === today() && streak === 0) { d.setDate(d.getDate() - 1); continue }
+
+      if (!isScheduled(d)) {
+        d.setDate(d.getDate() - 1)
+        continue
+      }
+
+      const done = completedSet.has(`${habitId}:${key}`)
+
+      if (!done) {
+        // grace: if today is not yet done, skip and look at yesterday
+        if (key === today() && streak === 0) {
+          d.setDate(d.getDate() - 1)
+          continue
+        }
         break
       }
+
       streak++
       d.setDate(d.getDate() - 1)
     }
+
     return streak
-  }, [completedSet])
+  }, [completedSet, habits])
 
   const getTotalStreak = useCallback(() => {
     let streak = 0
