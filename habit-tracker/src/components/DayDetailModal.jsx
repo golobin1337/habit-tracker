@@ -1,11 +1,65 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Check, Clock, AlertTriangle, Bell } from 'lucide-react'
+import { X, Check, Clock, AlertTriangle, Bell, CalendarPlus } from 'lucide-react'
 import { MONTH_NAMES, toKey } from '../utils/dateUtils'
 
 const DAY_NAMES_FULL = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
-function formatTime(time) {
-  return time ? ` às ${time}` : ''
+function HabitRow({ h, done, isLater, onToggle, date }) {
+  return (
+    <motion.button
+      key={h.id}
+      whileTap={{ scale: 0.97 }}
+      onClick={() => onToggle?.(h.id, date)}
+      className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-all text-left"
+      style={{
+        background: done ? '#22c55e12' : 'var(--cfill2)',
+        border: `1px solid ${done ? '#22c55e30' : 'transparent'}`,
+        opacity: isLater ? 0.6 : 1,
+      }}
+    >
+      <span className="text-base flex-shrink-0" style={{ opacity: done ? 1 : 0.4 }}>
+        {h.icon}
+      </span>
+
+      <div className="flex-1 min-w-0">
+        <span
+          className="text-sm font-medium block truncate text-left"
+          style={{ color: done ? '#22c55e' : isLater ? 'var(--ct4)' : 'var(--ct2)' }}
+        >
+          {h.name}
+        </span>
+        {isLater && (
+          <span className="text-xs flex items-center gap-1 mt-0.5" style={{ color: 'var(--ct5)' }}>
+            <CalendarPlus size={10} />
+            criado depois
+          </span>
+        )}
+      </div>
+
+      <motion.div
+        animate={{
+          background: done ? '#22c55e' : 'var(--cfill3)',
+          scale: done ? 1 : 0.85,
+        }}
+        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+      >
+        <AnimatePresence mode="wait">
+          {done && (
+            <motion.div
+              key="check"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Check size={12} style={{ color: 'white' }} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.button>
+  )
 }
 
 export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate, onToggle, reminders, onClose }) {
@@ -16,19 +70,28 @@ export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate,
   const monthName = MONTH_NAMES[date.getMonth()]
   const label = `${dayName}, ${date.getDate()} de ${monthName}`
 
-  const activeHabits = habits.filter((h) => {
+  // Hábitos que existiam naquele dia e estavam agendados
+  const existingHabits = habits.filter((h) => {
     const start = h.start_date ?? h.created_at?.slice(0, 10) ?? ''
     return start <= key && isHabitActiveOnDate(h, date)
   })
 
-  const doneCount = activeHabits.filter((h) => isCompleted(h.id, date)).length
-  const total = activeHabits.length
+  // Hábitos criados APÓS o dia, mas agendados para esse dia da semana
+  const laterHabits = habits.filter((h) => {
+    const start = h.start_date ?? h.created_at?.slice(0, 10) ?? ''
+    return start > key && isHabitActiveOnDate(h, date)
+  })
+
+  const doneCount = existingHabits.filter((h) => isCompleted(h.id, date)).length
+  const total = existingHabits.length
   const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0
   const pctColor = pct >= 75 ? '#22c55e' : pct >= 40 ? '#8b5cf6' : '#f97316'
 
   const urgentReminders = reminders.filter((r) => r.urgent)
   const normalReminders = reminders.filter((r) => !r.urgent)
   const sortedReminders = [...urgentReminders, ...normalReminders]
+
+  const hasAnything = existingHabits.length > 0 || laterHabits.length > 0 || sortedReminders.length > 0
 
   return (
     <AnimatePresence>
@@ -67,7 +130,7 @@ export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate,
             </button>
           </div>
 
-          {/* Progress bar */}
+          {/* Progress bar — só conta hábitos que existiam */}
           {total > 0 && (
             <div className="mb-5">
               <div className="flex justify-between mb-1.5">
@@ -89,60 +152,48 @@ export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate,
             </div>
           )}
 
-          {/* Lista unificada de hábitos */}
-          {activeHabits.length > 0 && (
+          {/* Hábitos que existiam naquele dia */}
+          {existingHabits.length > 0 && (
             <div className="mb-4">
               <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--ct3)' }}>
                 Hábitos
               </p>
               <div className="space-y-1.5">
-                {activeHabits.map((h) => {
-                  const done = isCompleted(h.id, date)
-                  return (
-                    <motion.button
-                      key={h.id}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => onToggle?.(h.id, date)}
-                      className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-all text-left"
-                      style={{
-                        background: done ? '#22c55e12' : 'var(--cfill2)',
-                        border: `1px solid ${done ? '#22c55e30' : 'transparent'}`,
-                      }}
-                    >
-                      <span className="text-base flex-shrink-0" style={{ opacity: done ? 1 : 0.4 }}>
-                        {h.icon}
-                      </span>
-                      <span
-                        className="text-sm font-medium flex-1 text-left"
-                        style={{ color: done ? '#22c55e' : 'var(--ct4)' }}
-                      >
-                        {h.name}
-                      </span>
-                      <motion.div
-                        animate={{
-                          background: done ? '#22c55e' : 'var(--cfill3)',
-                          scale: done ? 1 : 0.85,
-                        }}
-                        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                      >
-                        <AnimatePresence mode="wait">
-                          {done && (
-                            <motion.div
-                              key="check"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              exit={{ scale: 0 }}
-                              transition={{ duration: 0.15 }}
-                            >
-                              <Check size={12} style={{ color: 'white' }} />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
-                    </motion.button>
-                  )
-                })}
+                {existingHabits.map((h) => (
+                  <HabitRow
+                    key={h.id}
+                    h={h}
+                    done={isCompleted(h.id, date)}
+                    isLater={false}
+                    onToggle={onToggle}
+                    date={date}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Hábitos criados depois */}
+          {laterHabits.length > 0 && (
+            <div className="mb-4">
+              <p
+                className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                style={{ color: 'var(--ct5)' }}
+              >
+                <CalendarPlus size={11} />
+                Criados depois deste dia
+              </p>
+              <div className="space-y-1.5">
+                {laterHabits.map((h) => (
+                  <HabitRow
+                    key={h.id}
+                    h={h}
+                    done={isCompleted(h.id, date)}
+                    isLater={true}
+                    onToggle={onToggle}
+                    date={date}
+                  />
+                ))}
               </div>
             </div>
           )}
@@ -202,7 +253,7 @@ export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate,
             </div>
           )}
 
-          {total === 0 && sortedReminders.length === 0 && (
+          {!hasAnything && (
             <div className="text-center py-8">
               <div className="text-4xl mb-2">📭</div>
               <p className="text-sm" style={{ color: 'var(--ct4)' }}>Nenhum registro para este dia</p>
