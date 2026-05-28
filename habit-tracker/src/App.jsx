@@ -634,6 +634,7 @@ export default function App() {
           habits={habits}
           isCompleted={isCompleted}
           isHabitActiveOnDate={isHabitActiveOnDate}
+          onToggle={toggleHabit}
           reminders={getRemindersForDate(toKey(selectedDay))}
           onClose={() => setSelectedDay(null)}
         />
