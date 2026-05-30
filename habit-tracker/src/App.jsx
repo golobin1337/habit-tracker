@@ -316,6 +316,7 @@ export default function App() {
                             freqLabel={prog.label}
                             streak={getStreak(habit.id)}
                             note={getNote(habit.id, today)}
+                            doneToday={isCompleted(habit.id, today)}
                             onToggle={() => toggleHabit(habit.id, today)}
                             onNoteChange={(text) => setNote(habit.id, today, text)}
                             onDelete={() => deleteHabit(habit.id)}
@@ -447,6 +448,7 @@ export default function App() {
                           key={habit.id}
                           habit={habit}
                           completed={isCompleted(habit.id, yesterday)}
+                          doneToday={isCompleted(habit.id, yesterday)}
                           streak={getStreak(habit.id)}
                           note={getNote(habit.id, yesterday)}
                           onToggle={() => toggleHabit(habit.id, yesterday)}

@@ -5,7 +5,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ProgressRing } from './ProgressRing'
 
-export function HabitCard({ habit, completed, progress, freqLabel, streak, note, onToggle, onNoteChange, onDelete, onEdit, weekData }) {
+export function HabitCard({ habit, completed, progress, freqLabel, streak, note, doneToday, onToggle, onNoteChange, onDelete, onEdit, weekData }) {
   const {
     attributes,
     listeners,
@@ -27,7 +27,7 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, note,
 
   const ringProgress = progress ?? (completed ? 1 : 0)
   const hasNote = !!note
-  const showNoteIcon = completed || hasNote
+  const showNoteIcon = (doneToday ?? completed) || hasNote
 
   return (
     <div
