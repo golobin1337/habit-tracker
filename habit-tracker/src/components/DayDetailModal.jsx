@@ -1,68 +1,83 @@
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Check, Clock, AlertTriangle, Bell, CalendarPlus } from 'lucide-react'
+import { X, Check, Clock, AlertTriangle, Bell, CalendarPlus, FileText } from 'lucide-react'
 import { MONTH_NAMES, toKey } from '../utils/dateUtils'
 
 const DAY_NAMES_FULL = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
-function HabitRow({ h, done, isLater, onToggle, date }) {
+function HabitRow({ h, done, isLater, onToggle, date, note, onNoteChange }) {
+  const [noteText, setNoteText] = useState(note ?? '')
+  useEffect(() => { setNoteText(note ?? '') }, [note])
+
+  const handleNoteBlur = () => {
+    if (noteText !== (note ?? '')) onNoteChange?.(noteText)
+  }
+
   return (
-    <motion.button
-      key={h.id}
-      whileTap={{ scale: 0.97 }}
-      onClick={() => onToggle?.(h.id, date)}
-      className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-all text-left"
+    <div
+      className="rounded-xl overflow-hidden"
       style={{
         background: done ? '#22c55e12' : 'var(--cfill2)',
         border: `1px solid ${done ? '#22c55e30' : 'transparent'}`,
-        opacity: isLater ? 0.6 : 1,
+        opacity: isLater ? 0.65 : 1,
       }}
     >
-      <span className="text-base flex-shrink-0" style={{ opacity: done ? 1 : 0.4 }}>
-        {h.icon}
-      </span>
-
-      <div className="flex-1 min-w-0">
-        <span
-          className="text-sm font-medium block truncate text-left"
-          style={{ color: done ? '#22c55e' : isLater ? 'var(--ct4)' : 'var(--ct2)' }}
-        >
-          {h.name}
-        </span>
-        {isLater && (
-          <span className="text-xs flex items-center gap-1 mt-0.5" style={{ color: 'var(--ct5)' }}>
-            <CalendarPlus size={10} />
-            criado depois
-          </span>
-        )}
-      </div>
-
-      <motion.div
-        animate={{
-          background: done ? '#22c55e' : 'var(--cfill3)',
-          scale: done ? 1 : 0.85,
-        }}
-        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={() => onToggle?.(h.id, date)}
+        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left"
       >
-        <AnimatePresence mode="wait">
-          {done && (
-            <motion.div
-              key="check"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              transition={{ duration: 0.15 }}
-            >
-              <Check size={12} style={{ color: 'white' }} />
-            </motion.div>
+        <span className="text-base flex-shrink-0" style={{ opacity: done ? 1 : 0.4 }}>
+          {h.icon}
+        </span>
+        <div className="flex-1 min-w-0">
+          <span
+            className="text-sm font-medium block truncate"
+            style={{ color: done ? '#22c55e' : isLater ? 'var(--ct4)' : 'var(--ct2)' }}
+          >
+            {h.name}
+          </span>
+          {isLater && (
+            <span className="text-xs flex items-center gap-1 mt-0.5" style={{ color: 'var(--ct5)' }}>
+              <CalendarPlus size={10} /> criado depois
+            </span>
           )}
-        </AnimatePresence>
-      </motion.div>
-    </motion.button>
+        </div>
+        <motion.div
+          animate={{ background: done ? '#22c55e' : 'var(--cfill3)', scale: done ? 1 : 0.85 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+        >
+          <AnimatePresence mode="wait">
+            {done && (
+              <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}>
+                <Check size={12} style={{ color: 'white' }} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.button>
+
+      {/* Nota */}
+      <div className="flex items-center gap-2 px-3 pb-2.5">
+        <FileText size={11} className="flex-shrink-0" style={{ color: 'var(--ct5)' }} />
+        <input
+          type="text"
+          value={noteText}
+          onChange={(e) => setNoteText(e.target.value)}
+          onBlur={handleNoteBlur}
+          onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+          placeholder="Nota (opcional)..."
+          className="flex-1 text-xs outline-none bg-transparent"
+          style={{ color: noteText ? 'var(--ct2)' : 'var(--ct5)' }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+    </div>
   )
 }
 
-export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate, onToggle, reminders, onClose }) {
+export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate, onToggle, getNote, setNote, reminders, onClose }) {
   if (!date) return null
 
   const key = toKey(date)
@@ -167,6 +182,8 @@ export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate,
                     isLater={false}
                     onToggle={onToggle}
                     date={date}
+                    note={getNote?.(h.id, date)}
+                    onNoteChange={(text) => setNote?.(h.id, date, text)}
                   />
                 ))}
               </div>
@@ -192,6 +209,8 @@ export function DayDetailModal({ date, habits, isCompleted, isHabitActiveOnDate,
                     isLater={true}
                     onToggle={onToggle}
                     date={date}
+                    note={getNote?.(h.id, date)}
+                    onNoteChange={(text) => setNote?.(h.id, date, text)}
                   />
                 ))}
               </div>

@@ -44,6 +44,8 @@ export function useHabits(userId) {
   const [habits, setHabits] = useState([])
   // Set de "habitId:YYYY-MM-DD" para lookup O(1)
   const [completedSet, setCompletedSet] = useState(new Set())
+  // Map de "habitId:YYYY-MM-DD" → note text
+  const [notesMap, setNotesMap] = useState(new Map())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -53,10 +55,14 @@ export function useHabits(userId) {
       setLoading(true)
       const [{ data: habitsData }, { data: logsData }] = await Promise.all([
         supabase.from('habits').select('*').order('position', { ascending: true }).order('created_at', { ascending: true }),
-        supabase.from('habit_logs').select('habit_id, date'),
+        supabase.from('habit_logs').select('habit_id, date, note'),
       ])
       setHabits(habitsData ?? [])
-      setCompletedSet(new Set((logsData ?? []).map((l) => `${l.habit_id}:${l.date}`)))
+      const logs = logsData ?? []
+      setCompletedSet(new Set(logs.map((l) => `${l.habit_id}:${l.date}`)))
+      const map = new Map()
+      logs.forEach((l) => { if (l.note) map.set(`${l.habit_id}:${l.date}`, l.note) })
+      setNotesMap(map)
       setLoading(false)
     }
 
@@ -106,7 +112,6 @@ export function useHabits(userId) {
     const setKey = `${habitId}:${key}`
     const wasCompleted = completedSet.has(setKey)
 
-    // Optimistic update
     setCompletedSet((prev) => {
       const next = new Set(prev)
       wasCompleted ? next.delete(setKey) : next.add(setKey)
@@ -114,11 +119,30 @@ export function useHabits(userId) {
     })
 
     if (wasCompleted) {
+      setNotesMap((prev) => { const next = new Map(prev); next.delete(setKey); return next })
       await supabase.from('habit_logs').delete().eq('habit_id', habitId).eq('date', key)
     } else {
       await supabase.from('habit_logs').insert({ habit_id: habitId, user_id: userId, date: key })
     }
   }, [completedSet, userId])
+
+  const setNote = useCallback(async (habitId, date, text) => {
+    const key = toKey(date)
+    const mapKey = `${habitId}:${key}`
+    setNotesMap((prev) => {
+      const next = new Map(prev)
+      text.trim() ? next.set(mapKey, text.trim()) : next.delete(mapKey)
+      return next
+    })
+    await supabase.from('habit_logs')
+      .update({ note: text.trim() || null })
+      .eq('habit_id', habitId)
+      .eq('date', key)
+  }, [])
+
+  const getNote = useCallback((habitId, date) =>
+    notesMap.get(`${habitId}:${toKey(date)}`) ?? '',
+  [notesMap])
 
   const isCompleted = useCallback((habitId, date) =>
     completedSet.has(`${habitId}:${toKey(date)}`),
@@ -285,5 +309,6 @@ export function useHabits(userId) {
     isCompleted, getDayCompletion, getStreak, getTotalStreak,
     getWeekStats, getMonthStats, completionToday,
     getHabitProgress, isHabitActiveOnDate,
+    setNote, getNote,
   }
 }

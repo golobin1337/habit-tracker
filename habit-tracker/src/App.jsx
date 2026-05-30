@@ -60,6 +60,8 @@ export default function App() {
     completionToday,
     getHabitProgress,
     isHabitActiveOnDate,
+    setNote,
+    getNote,
   } = useHabits(user?.id)
 
   const today = new Date()
@@ -313,7 +315,9 @@ export default function App() {
                             progress={prog.progress}
                             freqLabel={prog.label}
                             streak={getStreak(habit.id)}
+                            note={getNote(habit.id, today)}
                             onToggle={() => toggleHabit(habit.id, today)}
+                            onNoteChange={(text) => setNote(habit.id, today, text)}
                             onDelete={() => deleteHabit(habit.id)}
                             onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
                             weekData={getWeekDataForHabit(habit)}
@@ -444,7 +448,9 @@ export default function App() {
                           habit={habit}
                           completed={isCompleted(habit.id, yesterday)}
                           streak={getStreak(habit.id)}
+                          note={getNote(habit.id, yesterday)}
                           onToggle={() => toggleHabit(habit.id, yesterday)}
+                          onNoteChange={(text) => setNote(habit.id, yesterday, text)}
                           onDelete={() => deleteHabit(habit.id)}
                           onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
                           weekData={getWeekDataForHabit(habit)}
@@ -635,6 +641,8 @@ export default function App() {
           isCompleted={isCompleted}
           isHabitActiveOnDate={isHabitActiveOnDate}
           onToggle={toggleHabit}
+          getNote={getNote}
+          setNote={setNote}
           reminders={getRemindersForDate(toKey(selectedDay))}
           onClose={() => setSelectedDay(null)}
         />

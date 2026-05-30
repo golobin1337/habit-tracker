@@ -1,10 +1,11 @@
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trash2, Flame, Pencil, GripVertical } from 'lucide-react'
+import { Trash2, Flame, Pencil, GripVertical, FileText } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ProgressRing } from './ProgressRing'
 
-export function HabitCard({ habit, completed, progress, freqLabel, streak, onToggle, onDelete, onEdit, weekData }) {
+export function HabitCard({ habit, completed, progress, freqLabel, streak, note, onToggle, onNoteChange, onDelete, onEdit, weekData }) {
   const {
     attributes,
     listeners,
@@ -14,7 +15,16 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, onTog
     isDragging,
   } = useSortable({ id: habit.id })
 
+  const [noteText, setNoteText] = useState(note ?? '')
+
+  useEffect(() => { setNoteText(note ?? '') }, [note])
+
+  const handleNoteBlur = () => {
+    if (noteText !== (note ?? '')) onNoteChange?.(noteText)
+  }
+
   const ringProgress = progress ?? (completed ? 1 : 0)
+  const hasNote = !!note
 
   return (
     <div
@@ -84,6 +94,9 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, onTog
                   {freqLabel}
                 </span>
               )}
+              {hasNote && !completed && (
+                <FileText size={11} className="shrink-0" style={{ color: 'var(--ct5)' }} />
+              )}
               {streak > 0 && (
                 <span className="flex items-center gap-0.5 text-xs text-orange-400 font-semibold shrink-0">
                   <Flame size={12} />
@@ -123,6 +136,38 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, onTog
             </button>
           </div>
         </div>
+
+        {/* Nota inline — só aparece quando concluído */}
+        <AnimatePresence>
+          {completed && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-2.5 flex items-center gap-2">
+                <FileText size={11} className="flex-shrink-0" style={{ color: 'var(--ct5)' }} />
+                <input
+                  type="text"
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  onBlur={handleNoteBlur}
+                  onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                  placeholder="Adicionar nota (opcional)..."
+                  className="flex-1 text-xs rounded-lg outline-none transition-colors bg-transparent"
+                  style={{
+                    color: noteText ? 'var(--ct2)' : 'var(--ct5)',
+                    paddingTop: '0.25rem',
+                    paddingBottom: '0.25rem',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   )
