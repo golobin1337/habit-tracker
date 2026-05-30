@@ -53,15 +53,23 @@ export function useHabits(userId) {
 
     async function load() {
       setLoading(true)
-      const [{ data: habitsData }, { data: logsData }] = await Promise.all([
+      const [{ data: habitsData }, logsResult] = await Promise.all([
         supabase.from('habits').select('*').order('position', { ascending: true }).order('created_at', { ascending: true }),
         supabase.from('habit_logs').select('habit_id, date, note'),
       ])
+
+      // Se a coluna note ainda não existe no banco, faz fallback sem ela
+      let logs = logsResult.data
+      if (logsResult.error) {
+        const { data: fallback } = await supabase.from('habit_logs').select('habit_id, date')
+        logs = fallback
+      }
+
       setHabits(habitsData ?? [])
-      const logs = logsData ?? []
-      setCompletedSet(new Set(logs.map((l) => `${l.habit_id}:${l.date}`)))
+      const safeLog = logs ?? []
+      setCompletedSet(new Set(safeLog.map((l) => `${l.habit_id}:${l.date}`)))
       const map = new Map()
-      logs.forEach((l) => { if (l.note) map.set(`${l.habit_id}:${l.date}`, l.note) })
+      safeLog.forEach((l) => { if (l.note) map.set(`${l.habit_id}:${l.date}`, l.note) })
       setNotesMap(map)
       setLoading(false)
     }
