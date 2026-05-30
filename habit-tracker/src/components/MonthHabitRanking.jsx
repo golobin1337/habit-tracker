@@ -32,8 +32,10 @@ export function MonthHabitRanking({ habits, year, month, isCompleted }) {
           }
         }
 
+        const fullWeeks = Math.floor(validDays / 7)
+        const remainingDays = validDays % 7
         const possible = (ft === 'daily' || ft === 'specific') ? validDays
-          : ft === 'weekly' ? Math.ceil(validDays / 7) * fc
+          : ft === 'weekly' ? fullWeeks * fc + Math.min(remainingDays, fc)
           : fc
 
         return { habit, completed, possible, rate: possible > 0 ? completed / possible : 0 }
