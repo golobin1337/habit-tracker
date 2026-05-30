@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trash2, Flame, Pencil, GripVertical, FileText } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
@@ -17,34 +17,13 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, note,
 
   const [noteOpen, setNoteOpen] = useState(false)
   const [noteText, setNoteText] = useState(note ?? '')
-  const popupRef = useRef(null)
-  const iconRef = useRef(null)
 
   useEffect(() => { setNoteText(note ?? '') }, [note])
 
-  const save = (text) => {
-    if (text !== (note ?? '')) onNoteChange?.(text)
-  }
-
   const handleClose = () => {
-    save(noteText)
+    if (noteText !== (note ?? '')) onNoteChange?.(noteText)
     setNoteOpen(false)
   }
-
-  // Fecha ao clicar fora
-  useEffect(() => {
-    if (!noteOpen) return
-    const handler = (e) => {
-      if (
-        popupRef.current && !popupRef.current.contains(e.target) &&
-        iconRef.current && !iconRef.current.contains(e.target)
-      ) {
-        handleClose()
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [noteOpen, noteText, note])
 
   const ringProgress = progress ?? (completed ? 1 : 0)
   const hasNote = !!note
@@ -69,7 +48,6 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, note,
           borderColor: completed ? `${habit.color}35` : undefined,
           boxShadow: completed ? `0 0 20px ${habit.color}12` : undefined,
           cursor: isDragging ? 'grabbing' : undefined,
-          position: 'relative',
         }}
       >
         <div className="flex items-center gap-3">
@@ -130,7 +108,6 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, note,
               <AnimatePresence>
                 {showNoteIcon && (
                   <motion.button
-                    ref={iconRef}
                     key="note-icon"
                     initial={{ opacity: 0, scale: 0.7 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -179,33 +156,30 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, note,
           </div>
         </div>
 
-        {/* Popup de nota */}
+        {/* Nota expandida dentro do card */}
         <AnimatePresence>
           {noteOpen && (
             <motion.div
-              ref={popupRef}
-              initial={{ opacity: 0, scale: 0.95, y: 4 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 4 }}
-              transition={{ duration: 0.15 }}
-              className="absolute left-4 right-4 z-50 rounded-xl p-3 shadow-xl"
-              style={{
-                top: 'calc(100% - 8px)',
-                background: 'var(--cglass)',
-                border: '1px solid var(--cglass-b)',
-                backdropFilter: 'blur(12px)',
-              }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.18 }}
+              className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-2">
-                <FileText size={12} style={{ color: habit.color, flexShrink: 0 }} />
+              <div
+                className="mt-2.5 flex items-center gap-2 rounded-xl px-3 py-2"
+                style={{ background: 'var(--cfill2)' }}
+              >
+                <FileText size={11} style={{ color: habit.color, flexShrink: 0 }} />
                 <input
                   autoFocus
                   type="text"
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
+                  onBlur={handleClose}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleClose()
+                    if (e.key === 'Enter') e.currentTarget.blur()
                     if (e.key === 'Escape') { setNoteText(note ?? ''); setNoteOpen(false) }
                   }}
                   placeholder="Adicionar nota (opcional)..."
