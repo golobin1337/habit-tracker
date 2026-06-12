@@ -15,7 +15,7 @@ export function HabitDetailModal({ habit, weekdayStats, onClose }) {
     ? weekdayStats.map((s, i) => ({
         ...s,
         day: i,
-        rate: s.scheduled >= 4 ? s.done / s.scheduled : null,
+        rate: s.scheduled >= 2 ? s.done / s.scheduled : null,
       }))
     : []
 
@@ -80,7 +80,7 @@ export function HabitDetailModal({ habit, weekdayStats, onClose }) {
             <div className="text-center py-8">
               <div className="text-3xl mb-2">📊</div>
               <p className="text-sm" style={{ color: 'var(--ct4)' }}>
-                Dados insuficientes — continue por pelo menos 4 semanas para ver padrões
+                Dados insuficientes — continue por pelo menos 2 semanas para ver padrões
               </p>
             </div>
           ) : (

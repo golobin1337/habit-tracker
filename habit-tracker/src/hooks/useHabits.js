@@ -264,7 +264,7 @@ export function useHabits(userId) {
     const start = new Date(startStr)
     const todayDate = new Date()
     const todayKey = toKey(todayDate)
-    if (Math.floor((todayDate - start) / 86400000) < 28) return null
+    if (Math.floor((todayDate - start) / 86400000) < 14) return null
     const byWeekday = Array(7).fill(null).map(() => ({ scheduled: 0, done: 0 }))
     const d = new Date(start)
     while (toKey(d) <= todayKey) {
@@ -275,7 +275,7 @@ export function useHabits(userId) {
       }
       d.setDate(d.getDate() + 1)
     }
-    if (!byWeekday.some((s) => s.scheduled >= 4)) return null
+    if (!byWeekday.some((s) => s.scheduled >= 2)) return null
     return byWeekday
   }, [habits, completedSet, isHabitActiveOnDate])
 
@@ -290,7 +290,7 @@ export function useHabits(userId) {
       const startStr = habit.start_date ?? habit.created_at?.slice(0, 10)
       if (!startStr) return
       const start = new Date(startStr)
-      if (Math.floor((todayDate - start) / 86400000) >= 28) hasEnough = true
+      if (Math.floor((todayDate - start) / 86400000) >= 14) hasEnough = true
       const d = new Date(start)
       while (toKey(d) <= todayKey) {
         if (isHabitActiveOnDate(habit, d)) {
@@ -302,7 +302,7 @@ export function useHabits(userId) {
       }
     })
     if (!hasEnough) return null
-    if (!byWeekday.some((s) => s.scheduled >= 4)) return null
+    if (!byWeekday.some((s) => s.scheduled >= 2)) return null
     return byWeekday
   }, [habits, completedSet, isHabitActiveOnDate])
 

@@ -13,7 +13,7 @@ export function WeekInsight({ globalWeekdayStats }) {
     .map((s, i) => ({
       ...s,
       day: i,
-      rate: s.scheduled >= 4 ? s.done / s.scheduled : null,
+      rate: s.scheduled >= 2 ? s.done / s.scheduled : null,
     }))
     .filter((s) => s.rate !== null)
 
