@@ -254,6 +254,58 @@ export function useHabits(userId) {
     return days.includes(date.getDay())
   }, [])
 
+  // Returns Array(7) of {scheduled, done} indexed by JS weekday (0=Sun…6=Sat)
+  // Returns null if habit has < 28 days of history or no weekday has >= 4 samples
+  const getHabitWeekdayStats = useCallback((habitId) => {
+    const habit = habits.find((h) => h.id === habitId)
+    if (!habit) return null
+    const startStr = habit.start_date ?? habit.created_at?.slice(0, 10)
+    if (!startStr) return null
+    const start = new Date(startStr)
+    const todayDate = new Date()
+    const todayKey = toKey(todayDate)
+    if (Math.floor((todayDate - start) / 86400000) < 28) return null
+    const byWeekday = Array(7).fill(null).map(() => ({ scheduled: 0, done: 0 }))
+    const d = new Date(start)
+    while (toKey(d) <= todayKey) {
+      if (isHabitActiveOnDate(habit, d)) {
+        const wd = d.getDay()
+        byWeekday[wd].scheduled++
+        if (completedSet.has(`${habitId}:${toKey(d)}`)) byWeekday[wd].done++
+      }
+      d.setDate(d.getDate() + 1)
+    }
+    if (!byWeekday.some((s) => s.scheduled >= 4)) return null
+    return byWeekday
+  }, [habits, completedSet, isHabitActiveOnDate])
+
+  // Accumulated weekday stats across all habits; null if insufficient history
+  const globalWeekdayStats = useMemo(() => {
+    if (habits.length === 0) return null
+    const todayDate = new Date()
+    const todayKey = toKey(todayDate)
+    const byWeekday = Array(7).fill(null).map(() => ({ scheduled: 0, done: 0 }))
+    let hasEnough = false
+    habits.forEach((habit) => {
+      const startStr = habit.start_date ?? habit.created_at?.slice(0, 10)
+      if (!startStr) return
+      const start = new Date(startStr)
+      if (Math.floor((todayDate - start) / 86400000) >= 28) hasEnough = true
+      const d = new Date(start)
+      while (toKey(d) <= todayKey) {
+        if (isHabitActiveOnDate(habit, d)) {
+          const wd = d.getDay()
+          byWeekday[wd].scheduled++
+          if (completedSet.has(`${habit.id}:${toKey(d)}`)) byWeekday[wd].done++
+        }
+        d.setDate(d.getDate() + 1)
+      }
+    })
+    if (!hasEnough) return null
+    if (!byWeekday.some((s) => s.scheduled >= 4)) return null
+    return byWeekday
+  }, [habits, completedSet, isHabitActiveOnDate])
+
   // Returns { progress: 0-1, completed: bool, count: number, goal: number, label: string|null }
   const getHabitProgress = useCallback((habit, weekDays) => {
     const ft = habit.frequency_type || 'daily'
@@ -318,5 +370,6 @@ export function useHabits(userId) {
     getWeekStats, getMonthStats, completionToday,
     getHabitProgress, isHabitActiveOnDate,
     setNote, getNote,
+    getHabitWeekdayStats, globalWeekdayStats,
   }
 }

@@ -17,6 +17,8 @@ import { MonthHeatmap } from './components/MonthHeatmap'
 import { DayReminderList } from './components/DayReminderList'
 import { MonthHabitRanking } from './components/MonthHabitRanking'
 import { DayDetailModal } from './components/DayDetailModal'
+import { HabitDetailModal } from './components/HabitDetailModal'
+import { WeekInsight } from './components/WeekInsight'
 import { StatsBar } from './components/StatsBar'
 import { getWeekDays, isFuture, DAY_NAMES_SHORT, formatDate, toKey } from './utils/dateUtils'
 
@@ -36,6 +38,7 @@ export default function App() {
   const [editingReminder, setEditingReminder] = useState(null)
   const [monthOffset, setMonthOffset] = useState(0)
   const [selectedDay, setSelectedDay] = useState(null)
+  const [selectedHabitDetail, setSelectedHabitDetail] = useState(null)
   const { theme, toggle, isDark } = useTheme()
   const { user, signIn, signUp, signOut, loading: authLoading } = useAuth()
 
@@ -62,6 +65,8 @@ export default function App() {
     isHabitActiveOnDate,
     setNote,
     getNote,
+    getHabitWeekdayStats,
+    globalWeekdayStats,
   } = useHabits(user?.id)
 
   const today = new Date()
@@ -321,6 +326,7 @@ export default function App() {
                             onNoteChange={(text) => setNote(habit.id, today, text)}
                             onDelete={() => deleteHabit(habit.id)}
                             onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
+                            onDetail={() => setSelectedHabitDetail(habit)}
                             weekData={getWeekDataForHabit(habit)}
                           />
                         )
@@ -455,6 +461,7 @@ export default function App() {
                           onNoteChange={(text) => setNote(habit.id, yesterday, text)}
                           onDelete={() => deleteHabit(habit.id)}
                           onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
+                          onDetail={() => setSelectedHabitDetail(habit)}
                           weekData={getWeekDataForHabit(habit)}
                         />
                       ))}
@@ -492,6 +499,7 @@ export default function App() {
               exit={{ opacity: 0, x: 12 }}
               className="space-y-4"
             >
+              <WeekInsight globalWeekdayStats={globalWeekdayStats} />
               <WeekView weekStats={weekStats} />
 
               <div className="glass rounded-2xl p-5">
@@ -635,6 +643,14 @@ export default function App() {
         onEdit={editReminder}
         editingReminder={editingReminder}
       />
+
+      {selectedHabitDetail && (
+        <HabitDetailModal
+          habit={selectedHabitDetail}
+          weekdayStats={getHabitWeekdayStats(selectedHabitDetail.id)}
+          onClose={() => setSelectedHabitDetail(null)}
+        />
+      )}
 
       {selectedDay && (
         <DayDetailModal

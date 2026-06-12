@@ -5,7 +5,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ProgressRing } from './ProgressRing'
 
-export function HabitCard({ habit, completed, progress, freqLabel, streak, note, doneToday, onToggle, onNoteChange, onDelete, onEdit, weekData }) {
+export function HabitCard({ habit, completed, progress, freqLabel, streak, note, doneToday, onToggle, onNoteChange, onDelete, onEdit, onDetail, weekData }) {
   const {
     attributes,
     listeners,
@@ -83,12 +83,13 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, note,
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span
-                className="font-medium text-sm truncate"
+              <button
+                onClick={(e) => { e.stopPropagation(); onDetail?.() }}
+                className="font-medium text-sm truncate text-left hover:underline"
                 style={{ color: completed ? habit.color : 'var(--ct1)' }}
               >
                 {habit.name}
-              </span>
+              </button>
               {freqLabel && (
                 <span
                   className="text-xs font-semibold shrink-0 px-1.5 py-0.5 rounded-md"
