@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trash2, Flame, Pencil, GripVertical, FileText } from 'lucide-react'
+import { Trash2, Flame, Pencil, GripVertical, FileText, Archive } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ProgressRing } from './ProgressRing'
 
-export function HabitCard({ habit, completed, progress, freqLabel, streak, note, doneToday, onToggle, onNoteChange, onDelete, onEdit, onDetail, weekData }) {
+export function HabitCard({ habit, completed, progress, freqLabel, streak, note, doneToday, onToggle, onNoteChange, onDelete, onEdit, onDetail, onArchive, weekData }) {
   const {
     attributes,
     listeners,
@@ -148,10 +148,13 @@ export function HabitCard({ habit, completed, progress, freqLabel, streak, note,
           </div>
 
           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-            <button onClick={onEdit} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors">
+            <button onClick={onEdit} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors" title="Editar">
               <Pencil size={14} />
             </button>
-            <button onClick={onDelete} className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors">
+            <button onClick={onArchive} className="p-1.5 rounded-lg hover:bg-amber-500/10 text-slate-500 hover:text-amber-400 transition-colors" title="Arquivar">
+              <Archive size={14} />
+            </button>
+            <button onClick={onDelete} className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors" title="Excluir">
               <Trash2 size={14} />
             </button>
           </div>

@@ -19,6 +19,7 @@ import { MonthHabitRanking } from './components/MonthHabitRanking'
 import { DayDetailModal } from './components/DayDetailModal'
 import { HabitDetailModal } from './components/HabitDetailModal'
 import { WeekInsight } from './components/WeekInsight'
+import { ArchivedHabitsModal } from './components/ArchivedHabitsModal'
 import { StatsBar } from './components/StatsBar'
 import { getWeekDays, isFuture, DAY_NAMES_SHORT, formatDate, toKey } from './utils/dateUtils'
 
@@ -39,6 +40,7 @@ export default function App() {
   const [monthOffset, setMonthOffset] = useState(0)
   const [selectedDay, setSelectedDay] = useState(null)
   const [selectedHabitDetail, setSelectedHabitDetail] = useState(null)
+  const [archivedOpen, setArchivedOpen] = useState(false)
   const { theme, toggle, isDark } = useTheme()
   const { user, signIn, signUp, signOut, loading: authLoading } = useAuth()
 
@@ -67,6 +69,9 @@ export default function App() {
     getNote,
     getHabitWeekdayStats,
     globalWeekdayStats,
+    archivedHabits,
+    archiveHabit,
+    unarchiveHabit,
   } = useHabits(user?.id)
 
   const today = new Date()
@@ -327,6 +332,7 @@ export default function App() {
                             onDelete={() => deleteHabit(habit.id)}
                             onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
                             onDetail={() => setSelectedHabitDetail(habit)}
+                            onArchive={() => archiveHabit(habit.id)}
                             weekData={getWeekDataForHabit(habit)}
                           />
                         )
@@ -349,6 +355,19 @@ export default function App() {
               )}
 
               <DayReminderList reminders={getRemindersForDate(toKey(today))} onDelete={deleteReminder} />
+
+              {archivedHabits.length > 0 && (
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  onClick={() => setArchivedOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-medium transition-colors"
+                  style={{ color: 'var(--ct4)', border: '1px dashed var(--cline)' }}
+                >
+                  <span>📦</span>
+                  {archivedHabits.length} hábito{archivedHabits.length > 1 ? 's' : ''} arquivado{archivedHabits.length > 1 ? 's' : ''}
+                </motion.button>
+              )}
             </motion.div>
           )}
 
@@ -462,6 +481,7 @@ export default function App() {
                           onDelete={() => deleteHabit(habit.id)}
                           onEdit={() => { setEditingHabit(habit); setModalOpen(true) }}
                           onDetail={() => setSelectedHabitDetail(habit)}
+                          onArchive={() => archiveHabit(habit.id)}
                           weekData={getWeekDataForHabit(habit)}
                         />
                       ))}
@@ -643,6 +663,14 @@ export default function App() {
         onEdit={editReminder}
         editingReminder={editingReminder}
       />
+
+      {archivedOpen && (
+        <ArchivedHabitsModal
+          habits={archivedHabits}
+          onUnarchive={(id) => { unarchiveHabit(id) }}
+          onClose={() => setArchivedOpen(false)}
+        />
+      )}
 
       {selectedHabitDetail && (
         <HabitDetailModal

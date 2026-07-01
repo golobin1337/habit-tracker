@@ -42,6 +42,7 @@ export const PRESET_ICONS = ICONS
 
 export function useHabits(userId) {
   const [habits, setHabits] = useState([])
+  const [archivedHabits, setArchivedHabits] = useState([])
   // Set de "habitId:YYYY-MM-DD" para lookup O(1)
   const [completedSet, setCompletedSet] = useState(new Set())
   // Map de "habitId:YYYY-MM-DD" → note text
@@ -65,7 +66,8 @@ export function useHabits(userId) {
         logs = fallback
       }
 
-      setHabits(habitsData ?? [])
+      setHabits((habitsData ?? []).filter((h) => !h.archived))
+      setArchivedHabits((habitsData ?? []).filter((h) => !!h.archived))
       const safeLog = logs ?? []
       setCompletedSet(new Set(safeLog.map((l) => `${l.habit_id}:${l.date}`)))
       const map = new Map()
@@ -114,6 +116,28 @@ export function useHabits(userId) {
     const { error } = await supabase.from('habits').delete().eq('id', id)
     if (!error) setHabits((prev) => prev.filter((h) => h.id !== id))
   }, [])
+
+  const archiveHabit = useCallback(async (id) => {
+    const habit = habits.find((h) => h.id === id)
+    if (!habit) return
+    const { error } = await supabase.from('habits').update({ archived: true }).eq('id', id)
+    if (!error) {
+      setHabits((prev) => prev.filter((h) => h.id !== id))
+      setArchivedHabits((prev) => [...prev, { ...habit, archived: true }])
+    }
+  }, [habits])
+
+  const unarchiveHabit = useCallback(async (id) => {
+    const habit = archivedHabits.find((h) => h.id === id)
+    if (!habit) return
+    const { error } = await supabase.from('habits').update({ archived: false }).eq('id', id)
+    if (!error) {
+      setArchivedHabits((prev) => prev.filter((h) => h.id !== id))
+      setHabits((prev) =>
+        [...prev, { ...habit, archived: false }].sort((a, b) => a.position - b.position)
+      )
+    }
+  }, [archivedHabits])
 
   const toggleHabit = useCallback(async (habitId, date) => {
     const key = toKey(date)
@@ -371,5 +395,6 @@ export function useHabits(userId) {
     getHabitProgress, isHabitActiveOnDate,
     setNote, getNote,
     getHabitWeekdayStats, globalWeekdayStats,
+    archivedHabits, archiveHabit, unarchiveHabit,
   }
 }
